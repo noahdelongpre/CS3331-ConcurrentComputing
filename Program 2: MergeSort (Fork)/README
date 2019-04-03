@@ -1,0 +1,92 @@
+//--------------------------------------------//
+// NAME: Noah de Longpre   USER ID: nkdelong  //
+// DUE DATE: 10/20/2017                       //
+// PROGRAM ASSIGNMENT 2                       //
+// FILE NAME: README                          //
+// PROGRAM PURPOSE:                           //
+//    This is the README to assignment 2,     //
+//    where I answer questions posed to me by //
+//    the instructor, CK, about the assignment//
+//--------------------------------------------//
+
+
+1.
+ The logic of Assignment 2 is pretty simple. 'main.c' starts
+off with reading in the values given to in via stdin and 
+file redirection,then it creates shared memory for its children to use
+ and from there forks another process and execvp's it to a new
+ program that takes the input given to it and breaks it down into other
+ processes by forking, and execvp'ing the new arguments. 
+ This breaks the problem down into pseudo recursive steps,
+ where every step is a new process. After it breaks it all the way down
+ to 2 numbers, it chains back up by using the modified binary sort to
+find its location in the temp shared array. Then copies the temp array onto
+the main array, getting ever closer to the fully sorted array.
+Once it gets all the way back to the top of chain, to the orginal merge,
+merge ends, power is passed back to the main function, and the 
+sorted list is printed out, and the shared memory deallocated.
+
+
+2.
+It works because it breaks the pieces down just as merge sort would,
+once it gets to the 'bottom' two numbers it begins to sort between
+two already sorted arrays. But to merge the two sorted arrays, we 
+used a modified binary search, which returns the value that the 
+value should be placed in, if the array was the size of both 
+sorted arrays combined. And it does this for every iteration,
+increasing in size until it reaches the size of the orginal array.
+
+3. 
+The orginal shared memory allocation is just to hold values read in
+through the file redirection, and it holds it in a place that all of 
+the other children can attach to, and see this information for sorting. 
+
+The temp shared memory that's created everytime a sorting phase happens
+between two previously sorted arrays, is there as an empty space for the
+sorted numbers to place themselves before overwriting the main array.
+It needed to be shared memory because all of the processes created for
+the binary search needed to access it at the same time, and the data
+for all the placements needed to be saved so the parent could overwrite
+the main shared memory with the newly sorted list
+
+4. 
+Yes, there are potential races conditions within the program and the 
+program specifications. If dealt with incorrectly, understanding why
+the binary sorting part SHOULDN'T push right back into the main array,
+where the other children are accessing that information and comparing.
+Another possible spot for race conditions in the program would be during
+the finding and writing of the temp shared array, if I have a bug, and 
+the binary search doesnt give the right output, processes would be accessing
+and placing numbers in each others places, leaving the rest of the spots
+blank, causing issues for the rest of the sort, and the wrong result.
+
+5. 
+You shouldn't assign the value back into the given array immediately
+because you would be overwriting something another process could be looking
+at, or hasn't looked at yet, which would delete numbers from the sort and
+add repeats, because some values hadn't been saved locally, and would be 
+saved over, and then compared against. If other processes wrote over 
+each others comparisons and values, then there is a very low chance that
+the program would even spit out the correct output.
+
+6.
+Before each sorting phase of the merge.c, I create a new shared memory of the
+size of both arrays combined, or the lower and upper bounds that the
+current process knows about. From here, I use it as a empty placeholder for
+the many child processes created to use to put their value given, into a
+sorted array using the modified binary search. The find their position,
+place the value in the temp shared memory, and then the parent process
+takes all the information held in that temp array and copies it onto the
+main array once all of the children return, when the parent knows none of
+the children are modifiing it. After the parent process copies over the main
+with the new data, the shared memory is detached and deleted. 
+
+7.
+Yes, if you made n processes at the start of the binary merge, one for 
+each element in the main array, you could have it loop backwards every time
+its needed to do a binary merge for that array entry, its given new bounds
+in another shared memory, perhaps inside a struct of sorts, and it 
+would then binary search through those bounds instead. This makes it so 
+each entry gets a process, and it sticks with it until the flag is given
+that the list is sorted, and the processes can die. 
+

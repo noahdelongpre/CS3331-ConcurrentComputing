@@ -1,0 +1,149 @@
+//--------------------------------------------------------------
+// NAME: Noah de Longpre'          USERID: nkdelong
+// DUE DATE : 12/15/2017
+// PROGRAM ASSIGNMENT 6
+// FILE NAME: README
+// PROGRAM PURPOSE :
+//    The README file is where I answer questions posed to me
+//    by the instructor about my program, in this case,
+//    program 6. 
+//--------------------------------------------------------------
+
+
+1. Logic of the Program
+
+The program reads matricies A and B from a file passed into the program.
+After this, it checks to see if they can be multiplied together, if they can
+be it creates the space for C, and begins to build the channels. The ThreadID
+scheme works as follows.
+
+	PA = Passer Thread
+	P = Processor
+	C = 3x3 Matrix example
+
+	    PA1   PA2  PA3
+             |     |    |
+     PA0  - P50   P51  P52 
+     PA100- P150  P151 P152
+     PA200- P250  P251 P252
+
+And when created, the channels know this naming scheme, and can associate
+the links between two processors because it can calculate the ID of both ends.
+Once these are created it creates the processors, and sends the pointer to
+the channels to the processors on creation. After this, the threads runs
+and send information along. After the processors receive a -1, they pass it
+along and place the value in the right location in matrix C, then exit.
+
+2. Why does my program work?
+
+Because the channels are syncronous channels, and have a waiting receive, 
+the processors cannot move on without reading a value from the receive. 
+The reason they read in the correct value is due to the unique UserDefId's
+made in the thread-main.cpp, this doesn't allow for overlap or renaming of
+channels, so all of the channels are distinct in their ID's.
+
+3. The meaning, value, and use of every variable. 
+
+l = number of rows in A, scanned in from file, used to iterate. 
+m = number of columns in A, scanned in from file, used to iterate.
+A = The matrix of A, values are scanned in from file, used for calcuations.
+u = number of rows in B, scanned in from file, used to iterate.
+v = number of columns in B, scanned in from file, used to iterate.
+B = the matrix of B transpose, scanned in from file as transpose, used in calc
+C = the matrix of C, no inital value as the processors need to fill in. 
+rowChan = the channels between the processors in the row direction.
+colChan = the channels between the processors in the column direction.
+rowPass = the channels between the passers and the processors in the rows.
+colPass = the channels between the passers and the processors in the columns. 
+IDPro = the calcuated ID to be passed into the creation of the inner
+processors.
+
+above = a placeholder for the channel above the current inner processor
+used only during the creation of the inner processor. 
+below = a placeholder for the channel below the current inner processor.
+used only during the creation of the inner processor. 
+left =  a placeholder for the channel left  the current inner processor.
+used only during the creation of the inner processor. 
+right = a placeholder for the channel right the current inner processor. 
+used only during the creation of the inner processor. 
+inner = the inner processor, receives information from channels and calculates
+the value to put into C at a certain location.
+
+Processor----
+rowValue = the value of C that the processor puts its final total.
+colValue = the value of C that the processor puts its final total.
+array = the matrix C passed into the processor for total placement. 
+UserDefinedThreadID = The unique calcuated ID for this processor.
+above = the channel above the current processor. 
+left = the channel left of the current processor.
+right = the channel right of the current processor.
+down = the channel down of the current processor.
+total = the amount calculated from the matrix multiplication at that point.
+Starts at 0, as the total hasn't been calculated yet. 
+
+Passer----
+UserDefinedThreadID = The unique calcuated ID for this processor.
+passing = the channel used to pass information from its array to a processor
+array = passed in chunk of A or B matrix to read and pass to a processor
+length = the length of the array given, know how long to increment for.
+
+
+
+4. 
+
+	1. Why does Pij compute the inner product of row i A, col j B.  
+	Because the passers pass along the numbers from the rows and columns 
+required to do the calculation, while the processors receive two numbers, one
+from the column (above) and one from the row (left), it takes these numbers
+multiplies them together, and adds that number to the running total for the
+inner product. Once it receives a -1, it knows its had all of the rows and
+columns passed to it, and puts that value into C at its own location.
+
+	2. Why Sync Channels?
+	We use synchronous channels for this program because they have
+blocking recieves. The program thats trying to receive cannot move on
+until something is read in. This allows for the total amount to only be
+changed when the numbers read from above and left exist in the channel.
+Async channels don't wait for something to be in the 'mailbox', and will
+move on if nothing is there, this could mean that numbers could be skipped
+if the processor read something in from above, but then read nothing in from
+the left, and 0 * anything is 0, basically negating that entry, causing the 
+total value to be incorrect.
+
+	3.
+	P P P --> Begins
+	P P P
+	P P P
+	
+	EOD P P 
+	P   P P
+	P   P P
+
+	EOD EOD P
+	EOD P   P
+	P   P   P
+	
+	EOD EOD EOD
+	EOD EOD P
+	EOD P	P
+
+	EOD EOD EOD
+	EOD EOD EOD
+	EOD EOD P
+
+	EOD EOD EOD
+	EOD EOD EOD
+	EOD EOD EOD --> Finished
+
+	It terminates because it reads in the EOD of -1, saying that its
+out of information to send to calculate with. And since it should receive the
+same number of information from the top and left, it should get -1 at the
+same time, and won't do another calcuation, but instead just terminate.
+
+	4. Can a thread term once it receives EOD from only one?
+	Yes, because it would only recieve that same amount from the top
+and bottom to multiply together to produce the dot product. If it got
+it from one, it would get it from the next recieve as well. Each Processor
+get N values sent to it from the top and N values from the left. 
+
+	

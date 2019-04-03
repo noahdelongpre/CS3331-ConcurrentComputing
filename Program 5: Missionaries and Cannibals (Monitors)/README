@@ -1,0 +1,155 @@
+//--------------------------------------------------------------
+// NAME: Noah de Longpre'          USERID: nkdelong
+// DUE DATE : 12/8/2017
+// PROGRAM ASSIGNMENT 5
+// FILE NAME: README
+// PROGRAM PURPOSE :
+//    The README file is where I answer questions posed to me
+//    by the instructor about my program, in this case,
+//    program 5. 
+//--------------------------------------------------------------
+
+1. Logic of the Program
+
+thread-main reads in from command line and creates the correct amount of
+Cannibal and Missionary threads, while also creating a boat thread to
+control the boat's physical actions. After this point thread-main passes
+control to the BoatThread, and thread-main waits for BoatThread to join back.
+BoatThread then begins the process. It uses BoatReady to run a picking
+method that lets loose only a safe boat combination, and nothing else.
+If a unsafe boat is waiting, the boat will not pick those 3 to go.
+After each of the safe threads are signaled, they go through one by one
+increasing the counter of the people on the boat, and then wait at the
+monitor condition Riding. Once the boat is signalled by the third person
+that got on the boat, the boat prints who is on the boat by reading 
+an array that was filled when they got on the boat, one array holds
+the number of the thread, while the other holds the type of thread they
+are, such as 'c' for Cannibal and 'm' for Missionary.
+After the ride is over, the BoatThread runs BoatDone, that just signals
+Riding, so that those three get off the boat, and continue on their way.
+
+
+2. Why does my Program work?
+
+My program works because I have mutual exclusion between my variables,
+allowing each thread safe use of the monitor variables, without the 
+mess caused by using Semaphores. This allows for each thread to look
+at and use each variable exclusively, without the fear of it being 
+changed out from under it. Because of this, the program can continue
+running, as the threads don't race conditon, causing the program to 
+deadlock or livelock. This means that only 3 people get on a boat,
+
+
+3. Every variable in the monitor and why they're right
+loads = The max number of loads, uses this to as a way to control how many
+times the boat should run, and so the monitor keeps track, it starts out 
+at the amount passed in, because that's what's given at command line. 
+
+waiting = how many total Cannibals and Missionaries are waiting to board
+the boat, starts at 0 because no one at the beginning should be waiting
+for the boat.
+
+onBoat = How many people are currently on the boat, increases everytime 
+one of the Cannibals or Missionaries are signaled from ____Here Condition.
+
+isBoatReady = Is the boat ready to board, 1 = true, 0 = false. The boat
+starts as true, because initially the boat has no one one it, and it
+is ready to board.  
+
+canWait = Number of cannibals waiting to be signaled at CannibalHere,
+starts at 0 because no cannibals are waiting for the boat yet.
+
+misWait = Number of missionaries waiting to be signaled a MissionaryHere,
+starts at 0 because no missionaries are waiting for the boat yet.
+
+Riding = Monitor Condition for the persons riding on the boat, 
+'value' starts at 0, as nothing can get by the condition until 
+that condition is signalled. Acts like a semaphore with a value of 0.
+
+BoatWaiting = Monitor Condition for the boat to be blocked when waiting
+for people to get in the boat. The third person to get on the boat
+signals this to release the boat once everyone is ready to go.
+
+CannibalHere = Monitor Condition for the Cannibal to wait at once he 
+arrives to board the boat. Waits for the boat to singal him that its 
+found a safe ride over the river out of the people currently waiting.
+
+MissionaryHere = Monitor Condition for the Missionary to wait at once he 
+arrives to board the boat. Waits for the boat to singal him that its 
+found a safe ride over the river out of the people currently waiting.
+
+types = A char array that holds the type value, either 'c' or 'm'
+for who is getting on the boat. Starts empty, as the data will be filled
+in later. 
+
+boarding = An int array that holds which of the Cannibals or Missionaries
+that particular thread is. Starts empty, as the data will be filled in by
+the threads later.
+
+
+
+4. Every boat load has EXACTLY three persons and is safe.
+So the boat is the only thing that can let people onto the boat, 
+and boat only signals 3 monitor conditions at any time, and only
+if the 3 people create a safe boat to go across. The boat checks to 
+see if a 'safe' amount of people are waiting, and picks them to join
+the boat. The boat cannot be unsafe because it only safe combinations
+are allowed out of waiting, and only in groups of three.
+
+5. State your policy of assembling a safe boat load clearly
+
+The BoatThread starts the montior function BoatReady where the boat 
+goes into a while loop looking for a correct and safe amount of people
+to load into the boat. Specifically, the boat looks to see if three
+or more missionaries are waiting, if two or more missionaries and one
+cannibal are waiting, or if 3 or more cannibals are currently waiting.
+I also implemented a way so that one combination is not more likely than
+another, for example, that a boat with 3 missionaries isn't always picked
+if it exists, even if there are cannibals waiting. I did this by generating
+a random number between 0-2 during the PickThree method that would just 
+check ONE of the safe boat rides. If the check fails, then it adds one
+to the random number and mod's it by three so it stays within the bounds
+of 0-2. By doing this, it checks all 3 options for a safe boat in a 
+random sequence, not favoring one over another. 
+
+6. Why do the Monitor methods work properly?
+	1. The only way off of the boat is for the boat to signal 
+the Riding Monitor condition, and the only area that Riding is signaled
+is inside the BoatDone method, which is only run by the boat thread after
+the boat has finished its current trip across the water. By making the
+current pasengers wait at the monitor conditon Riding, it ensures that
+nothing can get by, because nothing is allowed to leave until its signaled.
+
+	2. When the boat is crossing the river it is impossible for
+anyone to jump off the boat. For the same reason as above and in a past 
+question, my PickThree method only selects safe boat rides, and only releases
+three threads into the "boat loading area". Since only three threads can get
+there at any given time, it ensures that only 3 people get on the boat, and
+that no more are released until after the boat has docked, because while
+the boat is running, its not looking for new passengers. This proves that 
+only three people are on the boat, and as described above, the only way off
+the boat is when the boat as finished the ride across the river. BoatDone is
+the only method that signals the Riding Condition, so nothing leaves the boat
+until the boat stops at its destination. 
+
+	3. Again, the PickThree method only releases three threads that create
+a safe boat ride, and as they board the ship one by one, they set the values
+of the type and boarding arrays. The type and boarding arrays hold the 
+character and number associated with that thread. Since only three are
+released, only three register, and the condition is met where only the 
+three that are registered are on the boat, and no one else can get on the
+boat without going through registration, but only three are released.
+
+	4. The threads for the cannibals and Missionaries get stuck waiting
+at the Riding Condition until the boat releases them during the BoatDone
+method. As shown above in a previous part of this question, there is no
+way for a thread to get off of the boat, and therefore, there is no way for
+the thread to check-in again if it is currently on the boat. The Threads
+are not waiting at the correct ____Here condition, and therefore cannot
+be accepted onto another boat. Also, the only way for another boat to be
+accepted, is if the boat thread is ready to accepted another boatfull. 
+So there is no way for a thread on the boat to be accepted again because
+the thread cannot leave the boat, and a thread cannot be accepted unless 
+the boat thread is looking for a new boatload. 
+
+

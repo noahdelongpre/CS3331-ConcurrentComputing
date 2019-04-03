@@ -1,0 +1,69 @@
+//--------------------------------------------------------------
+// NAME: Noah de Longpre'          USERID: nkdelong
+// DUE DATE : 11/3/2017
+// PROGRAM ASSIGNMENT 3
+// FILE NAME: README
+// PROGRAM PURPOSE :
+//    The README file is where I answer questions posed to me
+//    by the instructor about my program, in this case,
+//    program 3. 
+//--------------------------------------------------------------
+
+
+1. Are there any race conditions in this prefix sum computation? Why?
+
+ No, there are no race conditions within this prefix sum computation.
+This is because the 2-D array takes care of the changing values every
+time a new sum is calculated. The threads USE the information concurrently
+but, do not attempt to change the information that the threads look at.
+Rather, it takes the new values calculated and places it in the row
+beneath the one it was currently looking at, and not changing 
+the row that's being used to calculate this new row. 
+
+2. Prove rigorously that this Algo does compute the prefix sum correctly.
+Proof by induction:
+
+Basis: n=1, or 2^0 = 1 = n
+A number alone is the prefix sum of itself. 1 is the prefix sum of 1.
+This works for any number 
+
+Inductive Hypothesis: 
+Assume this works for up to n elements, with k iterations 
+
+Inductive Step: Prove for k+1 iterations
+
+K step sum = i-(i-2^j +1)+1 = i-i+2^j -1+1 = 2^j
+
+K+1 step sum where we replace all the i's with i-2^j:
+i-2^j -i+2^j +2^j -1 +1 = 2^j 
+
+K = K+1 
+Therefore the sum is correct, because we assumed it was correct up to K. 
+
+
+3. Can the result of x[i] + x[i - 2^h-1] of run h be saved back into x[i]?
+Explain your findings as clearly as possible. 
+
+No, not immediately anyway. If you were to save directly back to the
+'x' array, you might overlap information that other threads are using.
+This creates a race condition because you are concurrently saving over
+shared memory that other processes / threads might be using. 
+
+However! There is a way to save back over 'x', but that requires a temp
+array to hold all of the calculated values, after all of the values are
+calculated, you can overwrite 'x' with the temp array, leaving only one
+global 1-D array, to start the next process.  
+
+4. Solution to not create threads every iteration. Suggest and discuss.
+
+Implement a circular buffer for what values should be computed next.
+You originally create 'n' threads, and place an entire row of calculations
+into the circular buffer, then let the threads start calculating. Once the
+buffer gets empty, fill it again with the next row that needs calculation.
+This continues until the buffer has been filled K times.
+This way, you only create 'n' threads at the beginning, and they run 
+through the buffer, until the flag is reached that its happened K times. 
+Using this method, threads could be 'reused' rather than recreated 
+for every calculation. The buffer would hold a struct of all of the
+information it needs to run the calculation again. 
+

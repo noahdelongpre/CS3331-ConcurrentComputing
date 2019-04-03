@@ -1,0 +1,94 @@
+//------------------------------------------------
+// NAME : Noah de Longpre'         USER ID: nkdelong
+// DUE DATE: 11/17/2017
+// PROGRAM ASSIGNMENT 4
+// FILE NAME : README
+// PROGRAM PURPOSE : 
+//	This is the README for prog4, where I answer 
+//      questions posted by my professor, about my program
+//------------------------------------------------
+
+1. At any time, there are no more than m baby eagles eating
+My program works based on the concept of baton passing, opposed to
+using just the mutex lock everytime I need to protect a variable.
+So to make sure that only m babies are eating at a time, they have to
+fail the condition of the first while loop, which they can only access
+while inside the mutex. If they fail the condition, they can go right into
+feeding, otherwise, they go into the loop, pass the baton, and wait for Mom
+to signal one of the waiting birds that food is ready. Then that bird
+passes the baton to the next bird waiting in line until there are no 
+waiting birds, or only m birds are eating.
+
+2. A baby must wait if no free feeding pots, or they're empty
+Again, the while loop condition is if all of the pots are eaten, the baby
+has to wait inside the loop after passing the baton to another bird. If the
+food has yet to be taken, then the babies can just skip the while that
+controls the birds that can be let out. 
+
+3. If there is a non-empty feeding pot, a ready and hungry eagle can eat.
+If the while condition of (eaten == pots) is false, or that not all of the
+placed pots have been eaten, then the bird skips the while loop, and
+immediately increases the counter of eating and eaten, and signals for
+another bird to come in to either eat immediately, or wait for food.
+
+4. No hungry baby eagle will eat using an empty feeding pot.
+Again, this waiting while loop will only let birds out of the waiting 'queue'
+if the while condition is false. Otherwise, those birds rejoin the Food wait
+semaphore right after passing the baton to another eagle, either waiting to
+be ready to eat, or waiting to be finished.
+
+5. At any time the feeding pot can only be used by one baby eagle
+The while loop will only release m number of baby eagles from the waiting
+queue, by letting each bird let through to signal the next bird waiting.
+This way, the birds have to 'fail' the while loop check to see if its okay 
+to leave, because they haven't reached the amount of pots eaten yet. Since
+there can only be m birds in the feeding area, that means its always a 1-1
+ratio of birds to pots, as the pots are just arbitrary, and no bird is
+"assigned" a pot, but rather, the value of how many have been eaten at that
+point. 
+
+6. Only one baby eagle among them all can signal Mom to make food.
+Inside of the while loop that holds all of the eagles that are required to
+wait, before the eagle waits, they check a 'boolean' int value called
+calledMom. calledMom is only true if a baby eagle has gone into the that if
+and immediately set calledMom to true. But since the if condition is
+!calledMom, its false for everyone else. That baby then waits for mom to
+signal the Ready Semaphore, which says that food has been served.
+
+7. Mother doesn't run until a baby wakes her. 
+As soon as mom is done preparing the meal, she immediately uses her goto_sleep
+method, that just tells mom to wait on the Mom semaphore to be signaled again.
+before she goes to sleep, she sets calledMom to false, so that another hungry
+baby can call her once they're hungry again. 
+
+8. While the mother eagle is preparing food, no baby can signal again.
+This happens because the baby that signals mom gets stuck waiting for 
+ready to be signalled, in which that baby is let loose. And when that baby
+passes that if statement to call mom, he locks the "door" behind him, not 
+allowing other babies in, making him the only that calls mom at any time.
+
+9. Before all the pots are filled, no hungry baby eagle can eat. 
+Since the baby that signals mom is stuck, he's also the only eagle that can
+pass the baton to a waiting baby eagle, after the food is prepared. Until
+Mom signals the ready semaphore, the birds are all locked in waiting, until
+the Mom signaller says that the food is ready, and lets a waiting bird go, 
+then joins the wait himself. 
+
+10. Once the feeding pots are refilled, the mother allows them to eat.
+Again, since the baby eagle that gets stuck singalling for mom to make food,
+they get stuck waiting for mom to fill / set variables. Once mom is ready to
+serve the food, she signals the Ready semaphore, letting the waiting baby
+eagle signal the others, and they begin to leave the Food semaphore by
+failing the while condition, and increasing the counter for babies eating.
+
+11. You must terminate your gracefully. Why does it terminate peacefully?
+After mom leaves, all of the birds currently in the waiting get released 
+back into the feeding area by failing the while condition to loop them back
+into waiting. So, now that m birds are in the feeding area, the others get
+looped back around inside the while loop, in which the first if statement
+checks to see if Mom has set the amount of feeding iterations lower than 0.
+If it has, it signals the next bird in waiting to check the same if. Then,
+in the ThreadFunc, if ready_to_eat returns -1, it breaks the while true loop
+the baby bird stays in, and exits the thread, ending peacefully. While the
+baby birds end, Mom is waiting for the threads to rejoin her, after they
+rejoin, she prints that the game ends, and the program terminates.

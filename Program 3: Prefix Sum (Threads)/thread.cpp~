@@ -1,0 +1,71 @@
+// ----------------------------------------------------------- 
+// NAME : Noah de Longpre'                        User ID: nkdelong 
+// DUE DATE : 11/3/2017                                       
+// PROGRAM ASSIGNMENT 3                                        
+// FILE NAME : thread.cpp            
+// PROGRAM PURPOSE :                                           
+//    This is the implementation of the thread.h class.
+//    This contains the constructor, as well as the ThreadFunc
+//    that runs when Begin() is called from a thread        
+// -----------------------------------------------------------
+
+#include <iostream>
+#include "thread.h"
+#include <math.h>
+#include <unistd.h>
+#include "ThreadClass.h"
+#include <stdio.h>
+#include <string.h>
+
+using namespace std;
+
+
+
+PrefixSum::PrefixSum(int num, int kk, int g, int stag, int jj, int** array )
+{
+	n = num;
+	k = kk;
+	gap = g;
+	stage = stag;
+	j = jj;
+	B = array;
+
+	ThreadName << "PrefixSum" << j << endl;
+
+}
+
+void PrefixSum::ThreadFunc()
+{
+	//What happens when Begin is run. 
+
+	Thread::ThreadFunc();
+
+	char buf[1000];
+	sprintf(buf, "     Thread %d created \n", j);
+	write(1, buf, strlen(buf));
+
+	//Initailize the Threads with something to run
+
+	if( (int) j - gap < 0 )
+	{
+		int val = B[stage-1][j];
+		B[stage][j] = val;
+		sprintf(buf, "     Thread %d copies x[%d]\n", j, j);
+		write(1, buf, strlen(buf));
+	}
+	else
+	{
+		int val1 = B[stage-1][j];
+		int val2 = B[stage-1][(int) (j - gap) ];
+		int comp =  val1 + val2;
+		B[stage][j] = comp;
+		sprintf(buf, "     Thread %d computes x[%d] + x[%d]\n", j, j, j-gap );
+		write(1, buf, strlen(buf));
+	}
+
+	sprintf(buf, "     Thread %d exits\n", j);
+	write(1, buf, strlen(buf));
+
+	Exit();
+	
+}
