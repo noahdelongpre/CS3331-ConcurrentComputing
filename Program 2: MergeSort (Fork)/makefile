@@ -6,7 +6,7 @@ merge:
 main:
 	gcc main.c -o main
 clean:
-	rm main
-	rm merge
+	rm main.o
+	rm merge.o
 run:
 	./main < nums
